@@ -80,9 +80,25 @@ class SpreadsheetImportTestCase(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertIn("Importação concluída".encode(), response.data)
+        self.assertIn("Copie estas senhas agora".encode(), response.data)
+        self.assertIn(b"maraba@motoshow.local", response.data)
         with self.app.app_context():
             self.assertEqual(City.query.count(), 9)
             self.assertEqual(ImmobilizedMotorcycle.query.count(), 10)
+            self.assertEqual(User.query.filter_by(role="city_user").count(), 9)
+            maraba = User.query.filter_by(
+                email="maraba@motoshow.local"
+            ).one()
+            self.assertEqual(maraba.city.name, "Marabá")
+
+        second = client.post(
+            "/admin/generate-city-accounts", follow_redirects=True
+        )
+        self.assertIn(
+            "Todas as cidades já possuem acesso".encode(), second.data
+        )
+        with self.app.app_context():
+            self.assertEqual(User.query.filter_by(role="city_user").count(), 9)
 
 
 if __name__ == "__main__":

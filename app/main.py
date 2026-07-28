@@ -10,6 +10,7 @@ from app import db
 from app.models import City, ImmobilizedMotorcycle, User
 from app.motorcycles import STATUS_OPTIONS
 from app.spreadsheet_import import import_motoshow_workbook
+from app.account_setup import create_missing_city_accounts
 
 main_bp = Blueprint("main", __name__)
 DELAY_DAYS = 30
@@ -206,10 +207,22 @@ def import_spreadsheet():
         db.session.rollback()
         flash("Não foi possível importar esta planilha.", "danger")
         return redirect(url_for("main.manage_users"))
-    flash(
-        f"Importação concluída: {result['created']} motos adicionadas, "
-        f"{result['skipped']} já existentes e "
-        f"{result['cities']} cidades processadas.",
-        "success",
+    credentials, skipped_accounts = create_missing_city_accounts()
+    return render_template(
+        "generated_credentials.html",
+        credentials=credentials,
+        skipped_accounts=skipped_accounts,
+        import_result=result,
     )
-    return redirect(url_for("main.dashboard"))
+
+
+@main_bp.route("/admin/generate-city-accounts", methods=["POST"])
+@admin_required
+def generate_city_accounts():
+    credentials, skipped_accounts = create_missing_city_accounts()
+    return render_template(
+        "generated_credentials.html",
+        credentials=credentials,
+        skipped_accounts=skipped_accounts,
+        import_result=None,
+    )
