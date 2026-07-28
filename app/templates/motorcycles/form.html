@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="h3 mb-4">{{ 'Editar moto imobilizada' if motorcycle else 'Nova moto imobilizada' }}</h1>
+  <form method="post" class="card shadow-sm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="city_id">Cidade</label>
+          {% if current_user.is_admin %}
+            <select class="form-select" id="city_id" name="city_id" required>
+              <option value="">Selecione</option>
+              {% for city in cities %}
+                <option value="{{ city.id }}" {% if motorcycle and motorcycle.city_id == city.id %}selected{% endif %}>{{ city.name }}</option>
+              {% endfor %}
+            </select>
+          {% else %}
+            <input class="form-control" value="{{ current_user.city.name }}" disabled>
+          {% endif %}
+        </div>
+        <div class="col-md-6"><label class="form-label" for="client">Cliente</label><input class="form-control" id="client" name="client" value="{{ motorcycle.client if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="model">Modelo</label><input class="form-control" id="model" name="model" value="{{ motorcycle.model if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="plate">Placa</label><input class="form-control text-uppercase" id="plate" name="plate" maxlength="10" value="{{ motorcycle.plate if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="chassis">Chassi</label><input class="form-control text-uppercase" id="chassis" name="chassis" value="{{ motorcycle.chassis if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="service_order">OS</label><input class="form-control" id="service_order" name="service_order" value="{{ motorcycle.service_order if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="entry_date">Data de entrada</label><input class="form-control" type="date" id="entry_date" name="entry_date" value="{{ motorcycle.entry_date.isoformat() if motorcycle else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label" for="expected_date">Previsão</label><input class="form-control" type="date" id="expected_date" name="expected_date" value="{{ motorcycle.expected_date.isoformat() if motorcycle else '' }}" required></div>
+        <div class="col-md-6"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status" required><option value="">Selecione</option>{% for status in statuses %}<option value="{{ status }}" {% if motorcycle and motorcycle.status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
+        <div class="col-md-6"><label class="form-label" for="responsible">Responsável</label><input class="form-control" id="responsible" name="responsible" value="{{ motorcycle.responsible if motorcycle and motorcycle.responsible else '' }}"></div>
+        <div class="col-12"><label class="form-label" for="reason">Motivo</label><textarea class="form-control" id="reason" name="reason" rows="3" required>{{ motorcycle.reason if motorcycle else '' }}</textarea></div>
+        <div class="col-12"><label class="form-label" for="notes">Observações</label><textarea class="form-control" id="notes" name="notes" rows="3">{{ motorcycle.notes if motorcycle and motorcycle.notes else '' }}</textarea></div>
+      </div>
+    </div>
+    <div class="card-footer d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-secondary" href="{{ url_for('motorcycles.index') }}">Cancelar</a>
+      <button class="btn btn-primary">Salvar</button>
+    </div>
+  </form>
+{% endblock %}

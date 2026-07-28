@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="sheet-title d-flex justify-content-between align-items-center">
+    <div>CONTROLE DE MOTOS IMOBILIZADAS{% if not current_user.is_admin %} - {{ current_user.city.name|upper }}{% endif %}</div>
+    <a class="btn btn-warning btn-sm fw-bold" href="{{ url_for('motorcycles.create') }}">NOVA MOTO</a>
+  </div>
+  <div class="sheet-meta mb-4">
+    <strong>Unidade:</strong> {{ 'Todas as unidades' if current_user.is_admin else current_user.city.name }}
+    <span class="ms-md-5"><strong>Regra de atraso:</strong> Acima de 30 dias no pátio</span>
+  </div>
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table sheet-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Modelo / Moto</th><th>Chassi</th><th>Avaria / Serviço Pendente</th>
+            <th>Status</th><th>Previsão de Conclusão</th><th>Data de Entrada</th>
+            <th>Dias no Pátio</th><th>Dias de Atraso</th><th>Responsável</th>
+            <th>Observações</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for motorcycle in motorcycles %}
+            {% set yard_days = motorcycle.days_in_yard(today) %}
+            {% set overdue_days = motorcycle.days_overdue(today) %}
+            <tr class="{{ 'table-warning' if overdue_days else '' }}">
+              <td><strong>{{ motorcycle.model }}</strong><small class="d-block text-muted">{{ motorcycle.plate }} · {{ motorcycle.client }}</small></td>
+              <td>{{ motorcycle.chassis }}</td>
+              <td>{{ motorcycle.reason }}</td>
+              <td>{{ motorcycle.status }}</td>
+              <td>{{ motorcycle.expected_date.strftime('%d/%m/%Y') }}</td>
+              <td>{{ motorcycle.entry_date.strftime('%d/%m/%Y') }}</td>
+              <td class="text-center fw-bold">{{ yard_days }}</td>
+              <td class="text-center fw-bold {{ 'text-danger' if overdue_days else '' }}">{{ overdue_days }}</td>
+              <td>{{ motorcycle.responsible or '—' }}</td>
+              <td>{{ motorcycle.notes or '—' }}</td>
+              <td class="text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('motorcycles.edit', motorcycle_id=motorcycle.id) }}">Editar</a>
+                <form class="d-inline" method="post" action="{{ url_for('motorcycles.delete', motorcycle_id=motorcycle.id) }}" onsubmit="return confirm('Excluir este registro?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="11" class="text-center text-muted py-4">Nenhuma moto imobilizada cadastrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

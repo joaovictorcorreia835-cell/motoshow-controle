@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: motoshow-controle
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask --app run.py db upgrade && flask --app run.py ensure-admin && gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 run:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: motoshow-db
+          property: connectionString
+      - key: BOOTSTRAP_ADMIN_NAME
+        value: Gestão Motoshow
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: motoshow-db
+    plan: free
+    databaseName: motoshow
+    user: motoshow

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="h3 mb-4">Usuários e cidades</h1>
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="h5">Nova cidade</h2>
+          <form method="post" action="{{ url_for('main.create_city') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="form-label" for="city-name">Nome</label>
+            <input class="form-control mb-3" id="city-name" name="name" required>
+            <button class="btn btn-outline-primary w-100">Cadastrar cidade</button>
+          </form>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h5">Novo usuário por cidade</h2>
+          <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="form-label" for="name">Nome</label>
+            <input class="form-control mb-2" id="name" name="name" required>
+            <label class="form-label" for="email">E-mail</label>
+            <input class="form-control mb-2" id="email" name="email" type="email" required>
+            <label class="form-label" for="password">Senha</label>
+            <input class="form-control mb-2" id="password" name="password" type="password" minlength="8" required>
+            <label class="form-label" for="city_id">Cidade</label>
+            <select class="form-select mb-3" id="city_id" name="city_id" required>
+              <option value="">Selecione</option>
+              {% for city in cities %}<option value="{{ city.id }}">{{ city.name }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-primary w-100" {% if not cities %}disabled{% endif %}>Criar usuário</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h5">Contas cadastradas</h2>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Cidade</th></tr></thead>
+              <tbody>
+                {% for account in users %}
+                  <tr>
+                    <td>{{ account.name }}</td><td>{{ account.email }}</td>
+                    <td>{{ 'Administrador' if account.is_admin else 'Usuário' }}</td>
+                    <td>{{ 'Todas as cidades' if account.is_admin else account.city.name }}</td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="4" class="text-muted">Nenhuma conta cadastrada.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

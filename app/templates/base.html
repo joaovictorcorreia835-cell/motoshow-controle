@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Motoshow Controle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      :root { --motoshow-blue: #1F4E78; --motoshow-yellow: #FFF200; --motoshow-light: #D9EAF7; }
+      body { background: #f4f7fa; font-family: Calibri, Arial, sans-serif; }
+      .navbar { min-height: 64px; background: #173f63 !important; border-bottom: 4px solid var(--motoshow-yellow); }
+      .navbar-brand { color: #fff !important; font-size: 1.3rem; font-weight: 700; letter-spacing: .02em; text-decoration: none; }
+      .navbar .nav-link { margin: 0 2px; padding: 9px 13px !important; color: #fff !important; font-weight: 600; border-radius: 5px; text-decoration: none; }
+      .navbar .nav-link:hover, .navbar .nav-link:focus { background: var(--motoshow-yellow); color: #111 !important; }
+      .navbar .nav-link.active { background: #fff; color: #173f63 !important; }
+      .navbar-toggler { border: 2px solid #fff; }
+      .navbar-toggler:focus { box-shadow: 0 0 0 .2rem rgba(255,242,0,.55); }
+      .navbar-toggler-icon { filter: brightness(0) invert(1); }
+      .sheet-title { background: var(--motoshow-blue); color: #fff; padding: 18px 22px; font-size: 1.15rem; font-weight: 700; text-align: center; }
+      .sheet-meta { background: #fff; padding: 14px 18px; border: 1px solid #d5dde5; }
+      .parameter-value { display: inline-block; min-width: 48px; margin-left: 8px; padding: 4px 12px; background: var(--motoshow-yellow); color: #111; font-weight: 700; text-align: center; }
+      .filter-panel { padding: 18px; background: var(--motoshow-light); border: 1px solid #b4ccdf; }
+      .section-heading { background: var(--motoshow-blue); color: #fff; font-weight: 700; padding: 9px 14px; margin-bottom: 12px; }
+      .metric-card { min-height: 118px; padding: 18px; background: #fff; border-left: 6px solid var(--motoshow-blue); box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); }
+      .metric-card span { display: block; font-weight: 700; color: #425466; }
+      .metric-card strong { display: block; margin-top: 8px; font-size: 2.2rem; color: var(--motoshow-blue); }
+      .sheet-table thead th { background: var(--motoshow-blue); color: #fff; font-size: .82rem; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
+      .sheet-table tbody td { background: #fff; border-color: #d9e1e8; font-size: .9rem; vertical-align: middle; }
+      .sheet-table tbody tr:nth-child(even) td { background: var(--motoshow-light); }
+      .chart-card { height: 100%; padding: 16px; background: #fff; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); }
+      .chart-card h2 { color: var(--motoshow-blue); font-size: 1rem; font-weight: 700; text-align: center; }
+      main.container { max-width: 1840px; padding-left: 28px; padding-right: 28px; }
+      .excel-dashboard { background: #fff; border: 1px solid #c8c8c8; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+      .excel-title { background: #245780; color: #fff; padding: 13px 20px; font-size: clamp(1.15rem, 1.7vw, 1.85rem); font-weight: 700; text-align: center; letter-spacing: .015em; }
+      .dashboard-filters { padding: 10px 16px; background: #f4f6f8; border-bottom: 1px solid #c8c8c8; }
+      .dashboard-filters label { display: block; margin-bottom: 3px; color: #364656; font-size: .76rem; font-weight: 700; text-transform: uppercase; }
+      .dashboard-grid { display: grid; grid-template-columns: minmax(560px, 55%) minmax(440px, 45%); min-height: 650px; }
+      .dashboard-left { padding: 22px 22px 30px; border-right: 1px solid #b7b7b7; }
+      .dashboard-right { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; padding: 14px; background: #fafafa; }
+      .parameter-row { display: grid; grid-template-columns: minmax(220px, 290px) 240px; align-items: center; margin-bottom: 26px; font-size: 1.05rem; font-weight: 700; }
+      .parameter-row strong { padding: 4px 20px; background: var(--motoshow-yellow); font-size: 1.15rem; text-align: center; }
+      .indicator-block { width: min(530px, 100%); margin-bottom: 54px; }
+      .block-title { background: #245780; color: #fff; padding: 5px 8px; font-weight: 700; }
+      .indicator-block .block-title { width: 55%; font-size: 1.05rem; }
+      .indicator-row { display: grid; grid-template-columns: 55% 45%; min-height: 31px; font-size: 1.04rem; font-weight: 700; }
+      .indicator-row span { padding: 4px 7px; background: #d9eaf7; }
+      .indicator-row strong { padding: 4px 7px; background: #d9e1f2; text-align: center; }
+      .unit-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+      .unit-table th { padding: 6px 10px; background: #245780; color: #fff; text-align: center; white-space: nowrap; }
+      .unit-table td { padding: 5px 10px; border-bottom: 1px solid #edf0f2; text-align: center; }
+      .unit-table td:first-child { font-size: 1.05rem; }
+      .unit-table tbody tr:hover td { background: #f4f8fb; }
+      .excel-chart-card { min-height: 290px; padding: 12px 18px; background: #fff; border: 1px solid #989898; border-radius: 0 0 16px 16px; }
+      .excel-chart-card:first-child { border-radius: 0; }
+      .excel-chart-card h2 { margin: 2px 0 8px; color: #111; font-size: 1.02rem; font-weight: 700; text-align: center; }
+      .chart-holder { position: relative; height: 270px; }
+      .bar-holder { height: 250px; }
+      .results-panel { margin: 0 22px 24px; border: 1px solid #c8c8c8; }
+      .btn-primary { background: var(--motoshow-blue); border-color: var(--motoshow-blue); }
+      .btn-warning { background: var(--motoshow-yellow); border-color: #d6cc00; }
+      @media (max-width: 1100px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .dashboard-left { border-right: 0; }
+        .dashboard-right { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      }
+      @media (max-width: 767px) {
+        main.container { padding-left: 10px; padding-right: 10px; }
+        .sheet-title { text-align: left; font-size: .95rem; }
+        .dashboard-right { grid-template-columns: 1fr; }
+        .parameter-row { grid-template-columns: 1fr 90px; }
+        .indicator-block { margin-bottom: 28px; }
+        .unit-table { font-size: .78rem; }
+        .unit-table th, .unit-table td { padding: 5px 4px; white-space: normal; }
+        .results-panel { margin: 0 10px 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">Motoshow Controle</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">Home</a>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if request.blueprint == 'motorcycles' else '' }}" href="{{ url_for('motorcycles.index') }}">Motos imobilizadas</a>
+            </li>
+            {% if current_user.is_admin %}
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if request.endpoint == 'main.manage_users' else '' }}" href="{{ url_for('main.manage_users') }}">Usuários</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+              <form method="post" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="nav-link border-0 bg-transparent" type="submit">Sair</button>
+              </form>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.login') }}">Entrar</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="mt-2">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

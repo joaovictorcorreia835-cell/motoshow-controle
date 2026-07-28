@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "motoshow-controle"
+version = "0.1.0"
+description = "Controle de eventos Motoshow com Flask, SQLAlchemy e autenticação"
+authors = ["Motoshow Controle"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Flask = "^3.0"
+Flask-Login = "^0.6.3"
+Flask-WTF = "^1.2.1"
+Flask-Migrate = "^4.0"
+Flask-SQLAlchemy = "^3.0"
+SQLAlchemy = "^1.4.59"
+python-dotenv = "^1.0"
+psycopg[binary] = "^3.3.4"
+gunicorn = "^23.0"
+
+[tool.poetry.scripts]
+run = "app:create_app"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
