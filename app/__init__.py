@@ -129,7 +129,12 @@ def create_app(test_config=None):
             )
         user = User.query.filter_by(email=email).first()
         if user:
-            click.echo(f"Administrador {email} já existe.")
+            user.name = name
+            user.role = "admin"
+            user.city_id = None
+            user.set_password(password)
+            db.session.commit()
+            click.echo(f"Administrador {email} sincronizado.")
             return
         user = User(name=name, email=email, role="admin")
         user.set_password(password)

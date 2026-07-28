@@ -54,6 +54,10 @@ class ProductionConfigurationTestCase(unittest.TestCase):
             "BOOTSTRAP_ADMIN_PASSWORD": "SenhaRender#2026",
         }
         first = runner.invoke(args=["ensure-admin"], env=environment)
+        with app.app_context():
+            user = User.query.one()
+            user.set_password("senha-antiga")
+            db.session.commit()
         second = runner.invoke(args=["ensure-admin"], env=environment)
         self.assertEqual(first.exit_code, 0)
         self.assertEqual(second.exit_code, 0)
