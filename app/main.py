@@ -1,5 +1,6 @@
 from functools import wraps
 from datetime import date, timedelta
+from zipfile import BadZipFile
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -8,6 +9,7 @@ from sqlalchemy import or_
 from app import db
 from app.models import City, ImmobilizedMotorcycle, User
 from app.motorcycles import STATUS_OPTIONS
+from app.spreadsheet_import import import_motoshow_workbook
 
 main_bp = Blueprint("main", __name__)
 DELAY_DAYS = 30
@@ -185,3 +187,29 @@ def create_city():
         db.session.commit()
         flash(f"Cidade {name} criada com sucesso.", "success")
     return redirect(url_for("main.manage_users"))
+
+
+@main_bp.route("/admin/import-spreadsheet", methods=["POST"])
+@admin_required
+def import_spreadsheet():
+    spreadsheet = request.files.get("spreadsheet")
+    if (
+        spreadsheet is None
+        or not spreadsheet.filename
+        or not spreadsheet.filename.lower().endswith(".xlsx")
+    ):
+        flash("Selecione uma planilha válida no formato .xlsx.", "danger")
+        return redirect(url_for("main.manage_users"))
+    try:
+        result = import_motoshow_workbook(spreadsheet.stream)
+    except (BadZipFile, ValueError, KeyError, OSError):
+        db.session.rollback()
+        flash("Não foi possível importar esta planilha.", "danger")
+        return redirect(url_for("main.manage_users"))
+    flash(
+        f"Importação concluída: {result['created']} motos adicionadas, "
+        f"{result['skipped']} já existentes e "
+        f"{result['cities']} cidades processadas.",
+        "success",
+    )
+    return redirect(url_for("main.dashboard"))

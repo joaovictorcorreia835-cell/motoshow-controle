@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from app import create_app, db
-from app.models import City, ImmobilizedMotorcycle
+from app.models import City, ImmobilizedMotorcycle, User
 from app.spreadsheet_import import import_motoshow_workbook, read_motoshow_workbook
 
 
@@ -57,6 +57,32 @@ class SpreadsheetImportTestCase(unittest.TestCase):
             self.assertEqual(sample.model, "FACTOR 150 VERME. 25/25")
             self.assertEqual(sample.status, "Solicitações de garantia")
             self.assertEqual(sample.client, "Não informado na planilha")
+
+    def test_admin_can_upload_spreadsheet(self):
+        with self.app.app_context():
+            admin = User(
+                name="Admin", email="admin@test.com", role="admin"
+            )
+            admin.set_password("admin123")
+            db.session.add(admin)
+            db.session.commit()
+        client = self.app.test_client()
+        client.post(
+            "/auth/login",
+            data={"email": "admin@test.com", "password": "admin123"},
+        )
+        with self.workbook_path.open("rb") as workbook:
+            response = client.post(
+                "/admin/import-spreadsheet",
+                data={"spreadsheet": (workbook, self.workbook_path.name)},
+                content_type="multipart/form-data",
+                follow_redirects=True,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Importação concluída".encode(), response.data)
+        with self.app.app_context():
+            self.assertEqual(City.query.count(), 9)
+            self.assertEqual(ImmobilizedMotorcycle.query.count(), 10)
 
 
 if __name__ == "__main__":

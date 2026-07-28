@@ -32,7 +32,8 @@ def _excel_date(value):
 
 def read_motoshow_workbook(file_path):
     """Lê registros do modelo Motoshow sem alterar a planilha original."""
-    with ZipFile(Path(file_path)) as archive:
+    source = file_path if hasattr(file_path, "read") else Path(file_path)
+    with ZipFile(source) as archive:
         shared_root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
         shared = [
             _node_text(item)

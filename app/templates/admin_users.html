@@ -2,6 +2,22 @@
 
 {% block content %}
   <h1 class="h3 mb-4">Usuários e cidades</h1>
+  <div class="card shadow-sm mb-4 border-primary">
+    <div class="card-body">
+      <h2 class="h5">Importar planilha Motoshow</h2>
+      <p class="text-muted mb-3">Carregue o arquivo Controle_Motos_Imobilizadas_Motoshow.xlsx. Registros já importados não serão duplicados.</p>
+      <form method="post" action="{{ url_for('main.import_spreadsheet') }}" enctype="multipart/form-data" class="row g-2 align-items-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-md-9">
+          <label class="form-label" for="spreadsheet">Arquivo Excel</label>
+          <input class="form-control" id="spreadsheet" name="spreadsheet" type="file" accept=".xlsx" required>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100">Importar dados</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <div class="row g-4">
     <div class="col-lg-4">
       <div class="card shadow-sm mb-4">

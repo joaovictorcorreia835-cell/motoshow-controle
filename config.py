@@ -30,3 +30,4 @@ class Config:
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SECURE = APP_ENV == "production"
     PREFERRED_URL_SCHEME = "https" if APP_ENV == "production" else "http"
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024
