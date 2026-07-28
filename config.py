@@ -12,8 +12,6 @@ def _database_url():
     url = _get_env("DATABASE_URL", f"sqlite:///{basedir / 'motoshow.db'}")
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
-    if url.startswith("postgresql://"):
-        url = "postgresql+psycopg://" + url[len("postgresql://"):]
     return url
 
 

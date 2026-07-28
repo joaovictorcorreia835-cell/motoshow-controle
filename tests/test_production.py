@@ -63,13 +63,13 @@ class ProductionConfigurationTestCase(unittest.TestCase):
                 User.query.one().check_password("SenhaRender#2026")
             )
 
-    def test_render_postgres_url_uses_psycopg3_driver(self):
+    def test_render_postgres_url_is_normalized_for_psycopg2(self):
         previous = os.environ.get("DATABASE_URL")
         os.environ["DATABASE_URL"] = "postgresql://user:pass@host/db"
         try:
             self.assertEqual(
                 _database_url(),
-                "postgresql+psycopg://user:pass@host/db",
+                "postgresql://user:pass@host/db",
             )
         finally:
             if previous is None:
