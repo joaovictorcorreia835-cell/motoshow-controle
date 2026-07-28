@@ -10,7 +10,7 @@ from app import db
 from app.models import City, ImmobilizedMotorcycle, User
 from app.motorcycles import STATUS_OPTIONS
 from app.spreadsheet_import import import_motoshow_workbook
-from app.account_setup import create_missing_city_accounts
+from app.account_setup import create_missing_city_accounts, reset_all_city_passwords
 
 main_bp = Blueprint("main", __name__)
 DELAY_DAYS = 30
@@ -225,4 +225,17 @@ def generate_city_accounts():
         credentials=credentials,
         skipped_accounts=skipped_accounts,
         import_result=None,
+    )
+
+
+@main_bp.route("/admin/reset-city-passwords", methods=["POST"])
+@admin_required
+def reset_city_passwords():
+    credentials = reset_all_city_passwords()
+    return render_template(
+        "generated_credentials.html",
+        credentials=credentials,
+        skipped_accounts=[],
+        import_result=None,
+        passwords_reset=True,
     )

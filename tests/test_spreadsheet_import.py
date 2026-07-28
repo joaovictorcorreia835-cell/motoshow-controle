@@ -100,6 +100,15 @@ class SpreadsheetImportTestCase(unittest.TestCase):
         with self.app.app_context():
             self.assertEqual(User.query.filter_by(role="city_user").count(), 9)
 
+        reset = client.post(
+            "/admin/reset-city-passwords", follow_redirects=True
+        )
+        self.assertEqual(reset.status_code, 200)
+        self.assertIn(
+            "senhas municipais foram redefinidas".encode(), reset.data
+        )
+        self.assertIn(b"maraba@motoshow.local", reset.data)
+
 
 if __name__ == "__main__":
     unittest.main()

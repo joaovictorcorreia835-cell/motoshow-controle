@@ -51,3 +51,22 @@ def create_missing_city_accounts():
         )
     db.session.commit()
     return credentials, skipped
+
+
+def reset_all_city_passwords():
+    credentials = []
+    users = User.query.filter_by(role="city_user").order_by(User.name).all()
+    for user in users:
+        if user.city is None:
+            continue
+        password = _password()
+        user.set_password(password)
+        credentials.append(
+            {
+                "city": user.city.name,
+                "email": user.email,
+                "password": password,
+            }
+        )
+    db.session.commit()
+    return credentials
