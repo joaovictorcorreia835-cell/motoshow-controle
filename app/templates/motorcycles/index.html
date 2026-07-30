@@ -14,7 +14,7 @@
       <table class="table sheet-table align-middle mb-0">
         <thead>
           <tr>
-            <th>Modelo / Moto</th><th>Chassi</th><th>Avaria / Serviço Pendente</th>
+            <th>Modelo / Moto</th><th>Chassi</th><th>OS</th><th>Avaria / Serviço Pendente</th>
             <th>Status</th><th>Previsão de Conclusão</th><th>Data de Entrada</th>
             <th>Dias no Pátio</th><th>Dias de Atraso</th><th>Responsável</th>
             <th>Observações</th><th>Ações</th>
@@ -27,6 +27,7 @@
             <tr class="{{ 'table-warning' if overdue_days else '' }}">
               <td><strong>{{ motorcycle.model }}</strong><small class="d-block text-muted">{{ motorcycle.plate }} · {{ motorcycle.client }}</small></td>
               <td>{{ motorcycle.chassis }}</td>
+              <td>{{ motorcycle.service_order }}</td>
               <td>{{ motorcycle.reason }}</td>
               <td>{{ motorcycle.status }}</td>
               <td>{{ motorcycle.expected_date.strftime('%d/%m/%Y') }}</td>
@@ -44,7 +45,7 @@
               </td>
             </tr>
           {% else %}
-            <tr><td colspan="11" class="text-center text-muted py-4">Nenhuma moto imobilizada cadastrada.</td></tr>
+            <tr><td colspan="12" class="text-center text-muted py-4">Nenhuma moto imobilizada cadastrada.</td></tr>
           {% endfor %}
         </tbody>
       </table>

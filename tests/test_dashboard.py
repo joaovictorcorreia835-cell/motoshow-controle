@@ -109,6 +109,7 @@ class DashboardTestCase(unittest.TestCase):
         search_response = self.client.get("/dashboard?q=Ana")
         self.assertIn(b'data-metric="total">1<', search_response.data)
         self.assertIn("Ana".encode(), search_response.data)
+        self.assertIn(b"OS-ABC1A11", search_response.data)
         self.assertNotIn("Bruno".encode(), search_response.data)
 
         status_response = self.client.get(

@@ -90,6 +90,7 @@ class ImmobilizedMotorcycleTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("cadastrada com sucesso".encode(), response.data)
+        self.assertIn(b"OS-1001", response.data)
         with self.app.app_context():
             motorcycle = ImmobilizedMotorcycle.query.one()
             self.assertEqual(motorcycle.city_id, self.campinas_id)

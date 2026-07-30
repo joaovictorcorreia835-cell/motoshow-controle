@@ -110,12 +110,12 @@
       <div class="block-title">RESULTADOS DA PESQUISA ({{ metrics.total }})</div>
       <div class="table-responsive">
         <table class="table sheet-table mb-0">
-          <thead><tr><th>Unidade</th><th>Modelo / Moto</th><th>Chassi</th><th>Avaria / Serviço Pendente</th><th>Status</th><th>Previsão</th><th>Entrada</th><th>Dias no Pátio</th><th>Dias de Atraso</th><th>Responsável</th></tr></thead>
+          <thead><tr><th>Unidade</th><th>Modelo / Moto</th><th>Chassi</th><th>OS</th><th>Avaria / Serviço Pendente</th><th>Status</th><th>Previsão</th><th>Entrada</th><th>Dias no Pátio</th><th>Dias de Atraso</th><th>Responsável</th></tr></thead>
           <tbody>
             {% for motorcycle in motorcycles %}
-              <tr><td>{{ motorcycle.city.name }}</td><td>{{ motorcycle.model }}</td><td>{{ motorcycle.chassis }}</td><td>{{ motorcycle.reason }}</td><td>{{ motorcycle.status }}</td><td>{{ motorcycle.expected_date.strftime('%d/%m/%Y') }}</td><td>{{ motorcycle.entry_date.strftime('%d/%m/%Y') }}</td><td>{{ motorcycle.days_in_yard(today) }}</td><td>{{ motorcycle.days_overdue(today, delay_days) }}</td><td>{{ motorcycle.responsible or '—' }}</td></tr>
+              <tr><td>{{ motorcycle.city.name }}</td><td>{{ motorcycle.model }}</td><td>{{ motorcycle.chassis }}</td><td>{{ motorcycle.service_order }}</td><td>{{ motorcycle.reason }}</td><td>{{ motorcycle.status }}</td><td>{{ motorcycle.expected_date.strftime('%d/%m/%Y') }}</td><td>{{ motorcycle.entry_date.strftime('%d/%m/%Y') }}</td><td>{{ motorcycle.days_in_yard(today) }}</td><td>{{ motorcycle.days_overdue(today, delay_days) }}</td><td>{{ motorcycle.responsible or '—' }}</td></tr>
             {% else %}
-              <tr><td colspan="10" class="text-center text-muted py-4">Nenhum resultado encontrado.</td></tr>
+              <tr><td colspan="11" class="text-center text-muted py-4">Nenhum resultado encontrado.</td></tr>
             {% endfor %}
           </tbody>
         </table>
