@@ -103,11 +103,15 @@ def create_app(test_config=None):
 
     @app.get("/healthz")
     def healthz():
+        # Sempre retorna 200 se o app está rodando
+        # O banco pode estar inicializando ainda
         try:
             db.session.execute(text("SELECT 1"))
-            return jsonify(status="ok"), 200
+            status = "ok"
         except Exception:
-            return jsonify(status="unavailable"), 503
+            # Banco indisponível, mas app está alive
+            status = "degraded"
+        return jsonify(status=status), 200
 
     @app.cli.command("init-db")
     def init_db():
