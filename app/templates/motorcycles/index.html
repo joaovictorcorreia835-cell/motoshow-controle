@@ -3,7 +3,13 @@
 {% block content %}
   <div class="sheet-title d-flex justify-content-between align-items-center">
     <div>CONTROLE DE MOTOS IMOBILIZADAS{% if not current_user.is_admin %} - {{ current_user.city.name|upper }}{% endif %}</div>
-    <a class="btn btn-warning btn-sm fw-bold" href="{{ url_for('motorcycles.create') }}">NOVA MOTO</a>
+    <div class="d-flex gap-2">
+      <form method="post" action="{{ url_for('motorcycles.export_excel') }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-success btn-sm fw-bold">📥 EXPORTAR EXCEL</button>
+      </form>
+      <a class="btn btn-warning btn-sm fw-bold" href="{{ url_for('motorcycles.create') }}">NOVA MOTO</a>
+    </div>
   </div>
   <div class="sheet-meta mb-4">
     <strong>Unidade:</strong> {{ 'Todas as unidades' if current_user.is_admin else current_user.city.name }}

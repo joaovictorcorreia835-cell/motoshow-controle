@@ -6,7 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import text
+from sqlalchemy import text, event
+from sqlalchemy.pool import Pool
 from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -40,6 +41,22 @@ def create_app(test_config=None):
     ):
         raise RuntimeError("SECRET_KEY segura é obrigatória em produção.")
 
+    # Configure connection pooling for production
+    db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    if db_uri.startswith(("postgresql://", "postgresql+psycopg2://")):
+        # PostgreSQL: use pool with pre-ping and recycling
+        app.config.setdefault("SQLALCHEMY_ENGINE_OPTIONS", {
+            "pool_pre_ping": True,      # Verifica conexão antes de usar
+            "pool_recycle": 300,         # Recicla conexão a cada 5 min
+            "pool_size": 5,              # Conexões no pool
+            "max_overflow": 10,          # Conexões extras permitidas
+            "connect_args": {
+                "connect_timeout": 10,   # Timeout de 10s na conexão
+                "keepalives": 1,
+                "keepalives_idle": 30,
+            }
+        })
+
     if app.config["APP_ENV"] == "production":
         app.config.update(
             SESSION_COOKIE_SECURE=True,
@@ -54,6 +71,27 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+
+    # Log database configuration on startup
+    with app.app_context():
+        db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        if db_uri.startswith(("postgresql://", "postgresql+psycopg2://")):
+            # Safe logging without password
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(db_uri)
+                safe_uri = f"{parsed.scheme}://{parsed.username}@{parsed.hostname}:{parsed.port or 5432}/{parsed.database}"
+                print(f"✓ Database configured: {safe_uri}")
+            except:
+                print(f"✓ Database configured (PostgreSQL)")
+        elif db_uri.startswith("sqlite:"):
+            print(f"✓ Database configured: SQLite (local)")
+        
+        # Log connection pooling config
+        engine_opts = app.config.get("SQLALCHEMY_ENGINE_OPTIONS", {})
+        if engine_opts:
+            print(f"  - Pool size: {engine_opts.get('pool_size', 'default')}")
+            print(f"  - Pool pre-ping: {engine_opts.get('pool_pre_ping', False)}")
 
     from app.auth import auth_bp
     from app.main import main_bp

@@ -1,7 +1,10 @@
 from datetime import date
+from io import BytesIO
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for, send_file
 from flask_login import current_user, login_required
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 from app import db
 from app.models import City, ImmobilizedMotorcycle
@@ -159,3 +162,108 @@ def delete(motorcycle_id):
     db.session.commit()
     flash("Moto imobilizada excluída com sucesso.", "success")
     return redirect(url_for("motorcycles.index"))
+
+
+def _export_to_excel(motorcycles):
+    """Gera um arquivo Excel com os dados das motos imobilizadas."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Motos Imobilizadas"
+    
+    # Definir largura das colunas
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 12
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 12
+    ws.column_dimensions['G'].width = 15
+    ws.column_dimensions['H'].width = 12
+    ws.column_dimensions['I'].width = 12
+    ws.column_dimensions['J'].width = 20
+    ws.column_dimensions['K'].width = 20
+    ws.column_dimensions['L'].width = 30
+    
+    # Estilos
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Cabeçalho
+    headers = [
+        "ID", "Cidade", "Cliente", "Modelo", "Placa", "Chassi",
+        "Ordem Serviço", "Motivo", "Data Entrada", "Previsão", "Status", "Responsável", "Observações"
+    ]
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = border
+    
+    # Dados
+    for row_num, motorcycle in enumerate(motorcycles, 2):
+        data = [
+            motorcycle.id,
+            motorcycle.city.name if motorcycle.city else "",
+            motorcycle.client,
+            motorcycle.model,
+            motorcycle.plate,
+            motorcycle.chassis,
+            motorcycle.service_order,
+            motorcycle.reason,
+            motorcycle.entry_date.isoformat() if motorcycle.entry_date else "",
+            motorcycle.expected_date.isoformat() if motorcycle.expected_date else "",
+            motorcycle.status,
+            motorcycle.responsible or "",
+            motorcycle.notes or "",
+        ]
+        
+        for col_num, value in enumerate(data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
+            cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+            cell.border = border
+    
+    # Congelar primeira linha
+    ws.freeze_panes = "A2"
+    
+    # Salvar em bytes
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
+@motorcycles_bp.route("/exportar-excel", methods=["POST"])
+@login_required
+def export_excel():
+    """Endpoint para fazer download da planilha em Excel."""
+    motorcycles = _accessible_query().order_by(
+        ImmobilizedMotorcycle.entry_date.desc(), ImmobilizedMotorcycle.id.desc()
+    ).all()
+    
+    if not motorcycles:
+        flash("Nenhuma moto para exportar.", "warning")
+        return redirect(url_for("motorcycles.index"))
+    
+    excel_file = _export_to_excel(motorcycles)
+    
+    # Nome do arquivo com data
+    from datetime import datetime
+    filename = f"motos-imobilizadas-{datetime.now().strftime('%Y%m%d-%H%M%S')}.xlsx"
+    
+    return send_file(
+        excel_file,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename
+    )

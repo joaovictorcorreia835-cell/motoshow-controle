@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: flask --app run.py db upgrade && flask --app run.py ensure-admin && gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 run:app
+    startCommand: python startup.py
     healthCheckPath: /healthz
     envVars:
       - key: APP_ENV
@@ -20,9 +20,9 @@ services:
       - key: BOOTSTRAP_ADMIN_NAME
         value: Gestão Motoshow
       - key: BOOTSTRAP_ADMIN_EMAIL
-        sync: false
+        value: admin@motoshow.local
       - key: BOOTSTRAP_ADMIN_PASSWORD
-        sync: false
+        generateValue: true
 
 databases:
   - name: motoshow-db
