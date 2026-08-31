@@ -3,8 +3,6 @@ from io import BytesIO
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for, send_file
 from flask_login import current_user, login_required
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 from app import db
 from app.models import City, ImmobilizedMotorcycle
@@ -166,6 +164,10 @@ def delete(motorcycle_id):
 
 def _export_to_excel(motorcycles):
     """Gera um arquivo Excel com os dados das motos imobilizadas."""
+    # Lazy import - openpyxl só é necessário quando exportar
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
     wb = Workbook()
     ws = wb.active
     ws.title = "Motos Imobilizadas"
