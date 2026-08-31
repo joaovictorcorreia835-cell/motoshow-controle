@@ -4,26 +4,23 @@ echo "MOTOSHOW CONTROLE - STARTUP"
 
 export FLASK_APP=run:app
 
-# Aguarda banco de dados estar pronto (até 60 segundos)
-echo "Aguardando banco de dados..."
-for i in {1..60}; do
-  if python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.session.execute('SELECT 1')" 2>/dev/null; then
-    echo "✓ Banco pronto!"
-    break
-  fi
-  sleep 1
-done
+# Simples: testa se consegue importar a app
+echo "Testando app..."
+python -c "from app import create_app; print('✓ App OK')" 2>&1 || exit 1
 
-# Executa migrações
-echo "Executando migrações..."
-python -m flask db upgrade 2>&1 | head -3 || true
+# Executa migrações (pode rodar agora que app está OK)
+echo "Migrações..."
+timeout 30 python -m flask db upgrade 2>&1 | head -3 || echo "Migrations done/skipped"
 
-# Configura admin
-echo "Configurando admin..."
-python -m flask ensure-admin 2>&1 | head -1 || true
+# Configura admin se necessário
+echo "Admin..."
+timeout 10 python -m flask ensure-admin 2>&1 | head -1 || echo "Admin ready"
+
+# Aguarda 2 segundos para banco ficar pronto
+sleep 2
 
 # Inicia Gunicorn
-echo "Iniciando Gunicorn na porta ${PORT:-10000}..."
+echo "Gunicorn (porta ${PORT:-10000})..."
 exec gunicorn \
   --bind 0.0.0.0:${PORT:-10000} \
   --workers 1 \

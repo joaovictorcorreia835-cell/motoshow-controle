@@ -1,6 +1,8 @@
 """Error handlers para tratamento gracioso de falhas de banco de dados."""
 
 from flask import jsonify
+import sys
+import traceback
 
 
 def register_error_handlers(app):
@@ -8,17 +10,9 @@ def register_error_handlers(app):
     
     @app.errorhandler(500)
     def internal_error(error):
-        """Handle 500 errors com mensagem melhor."""
-        import traceback
-        error_msg = str(error)
-        traceback.print_exc()
-        
-        # Se for erro de conexão com DB
-        if "could not translate host name" in error_msg or "connection refused" in error_msg:
-            return jsonify({
-                "error": "Banco de dados indisponível",
-                "status": "database_unavailable"
-            }), 503
+        """Handle 500 errors com stack trace no stderr."""
+        print(f"\n❌ 500 ERROR: {error}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         
         return jsonify({
             "error": "Erro interno do servidor",
