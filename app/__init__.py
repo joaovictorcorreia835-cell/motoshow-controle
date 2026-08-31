@@ -96,10 +96,14 @@ def create_app(test_config=None):
     from app.auth import auth_bp
     from app.main import main_bp
     from app.motorcycles import motorcycles_bp
+    from app.errors import register_error_handlers
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(motorcycles_bp)
+    
+    # Register error handlers
+    register_error_handlers(app)
 
     @app.get("/healthz")
     def healthz():
