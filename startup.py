@@ -5,11 +5,6 @@ import os
 import sys
 import time
 import subprocess
-from pathlib import Path
-
-# Adiciona o diretório do projeto ao path
-project_dir = Path(__file__).parent
-sys.path.insert(0, str(project_dir))
 
 os.environ.setdefault("FLASK_APP", "run:app")
 
@@ -20,93 +15,68 @@ print("=" * 70 + "\n")
 # Check environment
 print("📋 Verificando ambiente...")
 print(f"   APP_ENV: {os.environ.get('APP_ENV', 'development')}")
-print(f"   DATABASE_URL: {os.environ.get('DATABASE_URL', 'sqlite (local)')[:50]}...")
+db_url = os.environ.get('DATABASE_URL', 'sqlite (local)')
+safe_db = db_url[:50] + '...' if len(db_url) > 50 else db_url
+print(f"   DATABASE_URL: {safe_db}")
 print()
 
-# Wait for database with aggressive retry
+# Try to connect to database
 print("⏳ Aguardando banco de dados (até 120s)...")
 db_ready = False
 for attempt in range(60):  # 120 segundos (2 segundos cada)
     try:
-        # Clear any cached imports
-        for mod in list(sys.modules.keys()):
-            if mod.startswith('app') or mod.startswith('run'):
-                del sys.modules[mod]
+        result = subprocess.run(
+            [sys.executable, "-c", "from app import create_app, db; app = create_app(); ctx = app.app_context(); ctx.push(); db.session.execute('SELECT 1'); print('OK')"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
         
-        from app import create_app, db
-        
-        app = create_app()
-        with app.app_context():
-            # Tenta conectar e validar
-            result = db.session.execute("SELECT 1")
-            db.session.close()
-        
-        print(f"   ✓ Banco de dados pronto! (tentativa {attempt + 1})")
-        db_ready = True
-        break
-        
+        if result.returncode == 0 and "OK" in result.stdout:
+            print(f"   ✓ Banco de dados pronto! (tentativa {attempt + 1})\n")
+            db_ready = True
+            break
+            
     except Exception as e:
-        error_msg = str(e)
-        if attempt < 59:
-            # Mostra apenas a cada 5 tentativas para não poluir logs
-            if (attempt + 1) % 5 == 0:
-                print(f"   ⏳ Tentativa {attempt + 1}/60: {error_msg[:60]}...")
-            time.sleep(2)
-        else:
-            print(f"   ✗ Falha após 120s: {error_msg}")
-            print(f"      Continuando mesmo assim (migrações podem falhar)...\n")
+        pass
+    
+    if (attempt + 1) % 10 == 0:
+        print(f"   ⏳ Tentativa {attempt + 1}/60...")
+    
+    time.sleep(2)
 
 if not db_ready:
-    print("   ⚠️  Banco de dados indisponível, continuando...\n")
+    print("   ⚠️  Banco indisponível, continuando mesmo assim...\n")
 else:
-    print()
-
-# Run migrations (safely)
-print("📦 Executando migrações...")
-try:
-    result = subprocess.run(
-        [sys.executable, "-m", "flask", "db", "upgrade"],
-        timeout=120,
-        capture_output=True,
-        text=True,
-        cwd=str(project_dir)
-    )
-    
-    if result.returncode == 0:
-        print("   ✓ Migrações completadas com sucesso")
-    elif "No new revisions" in result.stdout or "Target database" in result.stdout:
-        print("   ✓ Banco já estava atualizado")
-    else:
-        error = result.stderr or result.stdout
-        print(f"   ⚠️  Aviso: {error[:200]}")
+    # Run migrations
+    print("📦 Executando migrações...")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "flask", "db", "upgrade"],
+            timeout=120,
+            capture_output=True,
+            text=True
+        )
         
-except subprocess.TimeoutExpired:
-    print("   ⚠️  Migrações demoraram muito (timeout), continuando...")
-except Exception as e:
-    print(f"   ⚠️  Migrações falharam: {e}")
+        if result.returncode == 0 or "No new revisions" in result.stdout:
+            print("   ✓ Migrações completadas\n")
+        else:
+            print(f"   ⚠️  {result.stderr[:100]}\n")
+    except Exception as e:
+        print(f"   ⚠️  Erro: {e}\n")
 
-print()
-
-# Create/update admin
-print("👤 Configurando administrador...")
-try:
-    result = subprocess.run(
-        [sys.executable, "-m", "flask", "ensure-admin"],
-        timeout=60,
-        capture_output=True,
-        text=True,
-        cwd=str(project_dir)
-    )
-    
-    output = result.stdout.strip() or "Configurado"
-    print(f"   ✓ {output}")
-    
-except subprocess.TimeoutExpired:
-    print("   ⚠️  Admin setup demoraram muito, continuando...")
-except Exception as e:
-    print(f"   ⚠️  Admin não configurado: {e}")
-
-print()
+    # Create/update admin
+    print("👤 Configurando administrador...")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "flask", "ensure-admin"],
+            timeout=60,
+            capture_output=True,
+            text=True
+        )
+        print(f"   ✓ {result.stdout.strip()}\n" if result.stdout else "   ✓ Configurado\n")
+    except Exception as e:
+        print(f"   ⚠️  {e}\n")
 
 # Start server
 port = os.environ.get("PORT", "5000")
