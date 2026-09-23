@@ -45,6 +45,7 @@ def dashboard():
         query = query.filter(
             ImmobilizedMotorcycle.city_id == current_user.city_id
         )
+    query = query.filter(ImmobilizedMotorcycle.removed_at.is_(None))
 
     search = request.args.get("q", "").strip()
     city_id = request.args.get("city_id", type=int)

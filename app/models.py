@@ -60,6 +60,7 @@ class ImmobilizedMotorcycle(db.Model):
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
+    removed_at = db.Column(db.DateTime, nullable=True, index=True)
 
     city = db.relationship("City", back_populates="immobilized_motorcycles")
 

@@ -15,6 +15,19 @@
     <strong>Unidade:</strong> {{ 'Todas as unidades' if current_user.is_admin else current_user.city.name }}
     <span class="ms-md-5"><strong>Regra de atraso:</strong> Acima de 30 dias no pátio</span>
   </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <form method="get" class="d-flex align-items-end gap-2">
+      <div>
+        <label class="form-label mb-1" for="filtro">Exibição</label>
+        <select class="form-select form-select-sm" id="filtro" name="filtro" onchange="this.form.submit()">
+          <option value="ativas" {% if filter_type == 'ativas' %}selected{% endif %}>Motos em imobilização</option>
+          <option value="retiradas" {% if filter_type == 'retiradas' %}selected{% endif %}>Motos retiradas</option>
+          <option value="todas" {% if filter_type == 'todas' %}selected{% endif %}>Todas as motos</option>
+        </select>
+      </div>
+    </form>
+    <strong>{{ motorcycles|length }} moto(s) no filtro</strong>
+  </div>
   <div class="card shadow-sm border-0">
     <div class="table-responsive">
       <table class="table sheet-table align-middle mb-0">
@@ -35,7 +48,7 @@
               <td>{{ motorcycle.chassis }}</td>
               <td>{{ motorcycle.service_order }}</td>
               <td>{{ motorcycle.reason }}</td>
-              <td>{{ motorcycle.status }}</td>
+              <td>{{ motorcycle.status }}{% if motorcycle.removed_at %}<small class="d-block text-danger">Retirada em {{ motorcycle.removed_at.strftime('%d/%m/%Y') }}</small>{% endif %}</td>
               <td>{{ motorcycle.expected_date.strftime('%d/%m/%Y') }}</td>
               <td>{{ motorcycle.entry_date.strftime('%d/%m/%Y') }}</td>
               <td class="text-center fw-bold">{{ yard_days }}</td>

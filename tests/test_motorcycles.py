@@ -128,7 +128,15 @@ class ImmobilizedMotorcycleTestCase(unittest.TestCase):
         )
         self.assertIn("excluída com sucesso".encode(), response.data)
         with self.app.app_context():
-            self.assertIsNone(db.session.get(ImmobilizedMotorcycle, motorcycle_id))
+            motorcycle = db.session.get(ImmobilizedMotorcycle, motorcycle_id)
+            self.assertIsNotNone(motorcycle)
+            self.assertIsNotNone(motorcycle.removed_at)
+        active_response = self.client.get("/motos-imobilizadas/")
+        removed_response = self.client.get(
+            "/motos-imobilizadas/?filtro=retiradas"
+        )
+        self.assertNotIn(b"OS-2002", active_response.data)
+        self.assertIn(b"OS-2002", removed_response.data)
 
     def test_city_user_is_forced_to_own_city_on_create(self):
         self.login("user@test.com", "cidade123")

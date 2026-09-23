@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for, send_file
@@ -97,11 +97,24 @@ def _validation_error(values):
 @motorcycles_bp.route("/")
 @login_required
 def index():
-    motorcycles = _accessible_query().order_by(
+    filter_type = request.args.get("filtro", "ativas")
+    query = _accessible_query()
+    if filter_type == "retiradas":
+        query = query.filter(ImmobilizedMotorcycle.removed_at.is_not(None))
+    elif filter_type == "todas":
+        filter_type = "todas"
+    else:
+        filter_type = "ativas"
+        query = query.filter(ImmobilizedMotorcycle.removed_at.is_(None))
+
+    motorcycles = query.order_by(
         ImmobilizedMotorcycle.entry_date.desc(), ImmobilizedMotorcycle.id.desc()
     ).all()
     return render_template(
-        "motorcycles/index.html", motorcycles=motorcycles, today=date.today()
+        "motorcycles/index.html",
+        motorcycles=motorcycles,
+        today=date.today(),
+        filter_type=filter_type,
     )
 
 
@@ -156,7 +169,7 @@ def edit(motorcycle_id):
 @login_required
 def delete(motorcycle_id):
     motorcycle = _get_accessible_or_404(motorcycle_id)
-    db.session.delete(motorcycle)
+    motorcycle.removed_at = datetime.utcnow()
     db.session.commit()
     flash("Moto imobilizada excluída com sucesso.", "success")
     return redirect(url_for("motorcycles.index"))
@@ -249,7 +262,9 @@ def _export_to_excel(motorcycles):
 @login_required
 def export_excel():
     """Endpoint para fazer download da planilha em Excel."""
-    motorcycles = _accessible_query().order_by(
+    motorcycles = _accessible_query().filter(
+        ImmobilizedMotorcycle.removed_at.is_(None)
+    ).order_by(
         ImmobilizedMotorcycle.entry_date.desc(), ImmobilizedMotorcycle.id.desc()
     ).all()
     
